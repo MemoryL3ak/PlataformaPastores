@@ -1,26 +1,50 @@
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap");
+
+
+@config "../../tailwind.config.ts";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+--background: 0 0% 100%;
+--foreground: 222.2 84% 4.9%;
+
+
+/* Paleta de marca (azul ligeramente violáceo) */
+--brand: 246 85% 55%;
+--brand-foreground: 210 40% 98%;
+
+
+--card: 0 0% 100%;
+--card-foreground: 222.2 84% 4.9%;
+--muted: 210 40% 96.1%;
+--muted-foreground: 215.4 16.3% 46.9%;
+--border: 214.3 31.8% 91.4%;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+.dark {
+--background: 224 71% 4%;
+--foreground: 213 31% 91%;
+--card: 222.2 47.4% 11.2%;
+--card-foreground: 213 31% 91%;
+--muted: 217.2 32.6% 17.5%;
+--muted-foreground: 215 20.2% 65.1%;
+--border: 217.2 32.6% 17.5%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+html, body { height: 100%; }
+body { @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))]; }
+
+
+/* Suaves contenedores */
+.card-soft { @apply bg-[hsl(var(--card))] shadow-soft rounded-2xl border; }
+
+
+/* Scrollbar minimal */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.35); border-radius: 999px; }

@@ -1,23 +1,32 @@
-﻿import { crearIglesia } from "./actions";
+﻿import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { uniqueSlug } from "@/lib/slug";
 
-export default function Page() {
+export default function NuevaIglesiaPage() {
+  async function crearIglesia(formData: FormData) {
+    "use server";
+    const nombre = String(formData.get("nombre") || "").trim();
+
+    const slug = await uniqueSlug(nombre, async (s) => {
+      const found = await prisma.iglesia.findUnique({ where: { slug: s } });
+      return !!found;
+    });
+
+    await prisma.iglesia.create({ data: { nombre, slug } });
+    revalidatePath("/iglesias");
+    redirect("/iglesias");
+  }
+
   return (
-    <div className="max-w-2xl space-y-3">
-      <h1 className="text-xl font-semibold">Nueva Iglesia</h1>
+    <div className="space-y-4 max-w-lg">
+      <h1 className="text-xl font-semibold">Nueva iglesia</h1>
       <form action={crearIglesia} className="space-y-3">
-        <input name="nombre" className="input" placeholder="Nombre" required />
-        <input name="slug" className="input" placeholder="Slug (auto si lo dejas vacÃ­o)" />
-        <div className="grid sm:grid-cols-2 gap-3">
-          <input name="direccion" className="input" placeholder="DirecciÃ³n" />
-          <input name="ciudad" className="input" placeholder="Ciudad" />
-          <input name="region" className="input" placeholder="RegiÃ³n" />
-          <input name="telefono" className="input" placeholder="TelÃ©fono" />
-        </div>
-        <input name="email" type="email" className="input" placeholder="Email" />
-        <div className="flex gap-2">
-          <button className="btn" type="submit">Guardar</button>
-          <button type="button" className="btn outline" onClick={()=>history.back()}>Cancelar</button>
-        </div>
+        <label className="block">
+          <span className="text-sm">Nombre</span>
+          <input name="nombre" className="input mt-1" required />
+        </label>
+        <button type="submit" className="btn">Guardar</button>
       </form>
     </div>
   );

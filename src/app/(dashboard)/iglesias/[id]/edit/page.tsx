@@ -1,48 +1,63 @@
 ﻿import { prisma } from "@/lib/prisma";
-import { actualizarIglesia, eliminarIglesia } from "./actions";
+import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { uniqueSlug } from "@/lib/slug";
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const i = await prisma.iglesia.findUnique({ where: { id: params.id } });
-  if (!i) return <div className="p-6">Iglesia no encontrada</div>;
+type Props = { params: { id: string } };
 
-  async function onUpdate(formData: FormData) {
+export default async function EditIglesiaPage({ params }: Props) {
+  const idParam = Array.isArray(params.id) ? params.id[0] : params.id;
+  if (!idParam) notFound();
+
+  const asNumber = Number(idParam);
+  const useNumberId = Number.isInteger(asNumber) && idParam.trim() === String(asNumber);
+  const where = useNumberId ? ({ id: asNumber } as const) : ({ id: idParam } as const);
+
+  const iglesia = await prisma.iglesia.findUnique({ where: where as any });
+  if (!iglesia) notFound();
+
+  async function actualizarIglesia(formData: FormData) {
     "use server";
-    return actualizarIglesia(i.id, formData);
-  }
+    const nombre = String(formData.get("nombre") || "").trim();
 
-  async function onDelete() {
-    "use server";
-    return eliminarIglesia(i.id);
+    // Generar slug único basado en el nuevo nombre (evita chocar con sí misma)
+    const slug = await uniqueSlug(nombre, async (s) => {
+      const found = await prisma.iglesia.findFirst({
+        where: { slug: s, NOT: { id: (where as any).id } },
+        select: { id: true },
+      });
+      return !!found;
+    });
+
+    await prisma.iglesia.update({
+      where: where as any,
+      data: { nombre, slug },
+    });
+
+    revalidatePath("/iglesias");
+    redirect("/iglesias");
   }
 
   return (
-    <div className="max-w-2xl space-y-3">
-      <h1 className="text-xl font-semibold">Editar Iglesia</h1>
+    <div className="space-y-4 max-w-lg">
+      <h1 className="text-xl font-semibold">Editar iglesia</h1>
 
-      <form action={onUpdate} className="space-y-3">
-        <input name="nombre" defaultValue={i.nombre} className="input" required />
-        <input name="slug" defaultValue={i.slug} className="input" />
-        <div className="grid sm:grid-cols-2 gap-3">
-          <input name="direccion" defaultValue={i.direccion ?? ""} className="input" />
-          <input name="ciudad" defaultValue={i.ciudad ?? ""} className="input" />
-          <input name="region" defaultValue={i.region ?? ""} className="input" />
-          <input name="telefono" defaultValue={i.telefono ?? ""} className="input" />
-        </div>
-        <input type="email" name="email" defaultValue={i.email ?? ""} className="input" />
+      <form action={actualizarIglesia} className="space-y-3">
+        <label className="block">
+          <span className="text-sm">Nombre</span>
+          <input name="nombre" defaultValue={iglesia.nombre} className="input mt-1" required />
+        </label>
+
         <div className="flex gap-2">
-          <button className="btn" type="submit">Guardar cambios</button>
-          <a href="/iglesias" className="btn outline">Volver</a>
+          <SubmitButton>Guardar cambios</SubmitButton>
+          <a href="/iglesias" className="btn-outline">Cancelar</a>
         </div>
-      </form>
-
-      <form action={onDelete} className="pt-4">
-        <button
-          className="btn danger"
-          onClick={(e)=>{ if(!confirm("Â¿Eliminar iglesia? TambiÃ©n desvincularÃ¡ a sus pastores.")) { e.preventDefault(); } }}
-        >
-          Eliminar
-        </button>
       </form>
     </div>
   );
+}
+
+function SubmitButton({ children }: { children: React.ReactNode }) {
+  "use client";
+  return <button type="submit" className="btn">{children}</button>;
 }

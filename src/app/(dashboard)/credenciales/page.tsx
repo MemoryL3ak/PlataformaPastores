@@ -14,7 +14,7 @@ export default async function Page() {
         <a className="btn" href="/credenciales/new">Nueva</a>
       </div>
 
-      <table className="min-w-full text-sm">
+<table className="table">
         <thead>
           <tr>
             <th className="text-left p-2">NÃºmero</th>

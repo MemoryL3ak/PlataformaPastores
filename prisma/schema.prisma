@@ -101,9 +101,9 @@ enum CredentialStatus {
 }
 
 model Iglesia {
-  id        String   @id @default(uuid())
+  id      Int    @id @default(autoincrement())
   nombre    String
-  slug      String   @unique
+  slug    String @unique
   direccion String?
   ciudad    String?
   region    String?

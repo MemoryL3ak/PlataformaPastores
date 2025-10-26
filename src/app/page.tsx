@@ -1,7 +1,9 @@
 ﻿// src/app/page.tsx
-import { redirect } from "next/navigation";
-
 export default function Home() {
-  redirect("/pastores"); // o "/(dashboard)" si prefieres un home de bienvenida
-  return null;
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Panel</h1>
+      <div className="card p-4">Bienvenido 👋</div>
+    </div>
+  );
 }
